@@ -8,7 +8,7 @@ beforeEach(async () => {
 });
 
 describe('Testing POST /recommendations', () => {
-  it('Create valid recommendation', async () => {
+  it('Creates valid recommendation', async () => {
     const recommendation = {
       name: faker.lorem.word(),
       youtubeLink: `https://www.youtube.com/${faker.random.alpha(10)}`,
@@ -47,5 +47,50 @@ describe('Testing POST /recommendations', () => {
       .send(recommendation);
 
     expect(result.status).toEqual(422);
+  });
+});
+
+describe('Testing POST /recommendations/:id/upvote', () => {
+  it('Returns 200 for an upvote in a valid recommendation', async () => {
+    const recommendation = {
+      name: faker.lorem.word(),
+      youtubeLink: `https://www.youtube.com/${faker.random.alpha(10)}`,
+    };
+
+    await supertest(app).post('/recommendations').send(recommendation);
+
+    const requestBeforeUpvote = await supertest(app).get('/recommendations');
+
+    const scoreBeforeUpvote = requestBeforeUpvote.body[0].score;
+
+    const result = await supertest(app).post(
+      `/recommendations/${requestBeforeUpvote.body[0].id}/upvote`
+    );
+
+    const requestAfterUpvote = await supertest(app).get('/recommendations');
+
+    const scoreAfterUpvote = requestAfterUpvote.body[0].score;
+
+    expect(result.status).toEqual(200);
+    expect(scoreBeforeUpvote).toEqual(scoreAfterUpvote - 1);
+  });
+
+  it('Returns 404 for an upvote with an invalid id', async () => {
+    const recommendation = {
+      name: faker.lorem.word(),
+      youtubeLink: `https://www.youtube.com/${faker.random.alpha(10)}`,
+    };
+
+    await supertest(app).post('/recommendations').send(recommendation);
+
+    const request = await supertest(app).get('/recommendations');
+
+    const idThatDoesNotExists = request.body[0].id + 1;
+
+    const result = await supertest(app).post(
+      `/recommendations/${idThatDoesNotExists}/upvote`
+    );
+
+    expect(result.status).toEqual(404);
   });
 });
