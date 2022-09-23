@@ -94,3 +94,90 @@ describe('Testing POST /recommendations/:id/upvote', () => {
     expect(result.status).toEqual(404);
   });
 });
+
+describe('Testing POST /recommendations/:id/downvote', () => {
+  it('Returns 200 for downvote in a recommendation with score=-4 and keeps the recommendation', async () => {
+    const recommendation = {
+      name: faker.lorem.word(),
+      youtubeLink: `https://www.youtube.com/${faker.random.alpha(10)}`,
+    };
+
+    await supertest(app).post('/recommendations').send(recommendation);
+
+    const requestBeforeDownvotes = await supertest(app).get('/recommendations');
+
+    const recommendationId = requestBeforeDownvotes.body[0].id;
+
+    for (let i = 0; i < 4; i++) {
+      await supertest(app).post(
+        `/recommendations/${recommendationId}/downvote`
+      );
+    }
+
+    const requestBeforeLastDownvote = await supertest(app).get(
+      '/recommendations'
+    );
+
+    await supertest(app).post(`/recommendations/${recommendationId}/downvote`);
+
+    const requestAfterLastDownvote = await supertest(app).get(
+      '/recommendations'
+    );
+
+    expect(requestBeforeLastDownvote.body[0].score).toEqual(-4);
+    expect(requestAfterLastDownvote.body[0].score).toEqual(-5);
+    expect(requestAfterLastDownvote.status).toEqual(200);
+  });
+  it('Returns 200 for downvote in a recommendation with score=-5 and deletes the recommendation', async () => {
+    const recommendation = {
+      name: faker.lorem.word(),
+      youtubeLink: `https://www.youtube.com/${faker.random.alpha(10)}`,
+    };
+
+    await supertest(app).post('/recommendations').send(recommendation);
+
+    const requestBeforeDownvotes = await supertest(app).get('/recommendations');
+
+    const recommendationId = requestBeforeDownvotes.body[0].id;
+
+    for (let i = 0; i < 5; i++) {
+      await supertest(app).post(
+        `/recommendations/${recommendationId}/downvote`
+      );
+    }
+
+    const requestBeforeLastDownvote = await supertest(app).get(
+      '/recommendations'
+    );
+
+    await supertest(app).post(`/recommendations/${recommendationId}/downvote`);
+
+    const requestAfterLastDownvote = await supertest(app).get(
+      '/recommendations'
+    );
+
+    expect(requestBeforeLastDownvote.body[0].score).toEqual(-5);
+    expect(requestAfterLastDownvote.status).toEqual(200);
+    expect(requestAfterLastDownvote.body.data).toEqual(undefined);
+    expect(requestAfterLastDownvote.status).toEqual(200);
+  });
+});
+
+describe('Testing GET /recommendations', () => {
+  it.todo('Returns 200 and an array with at maximum 10 recommendations');
+});
+
+describe('Testing GET /recommendations/:id', () => {
+  it.todo('Returns 200 and one recommendation with the correct id');
+});
+
+describe('Testing GET /recommendations/random', () => {
+  it.todo('Returns 200 and a recommendation');
+  it.todo('Returns 404 if there are no recommendations');
+});
+
+describe('Testing GET /recommendations/top/:amount', () => {
+  it.todo(
+    'Returns 200 and an object with the amount of recommendations inside'
+  );
+});
