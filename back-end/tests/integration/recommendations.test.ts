@@ -164,7 +164,23 @@ describe('Testing POST /recommendations/:id/downvote', () => {
 });
 
 describe('Testing GET /recommendations', () => {
-  it.todo('Returns 200 and an array with at maximum 10 recommendations');
+  it('Returns 200 and an array with at maximum 10 recommendations', async () => {
+    const numberOfRecommendationsSent = Number(faker.random.numeric(1));
+
+    for (let i = 0; i < numberOfRecommendationsSent; i++) {
+      const recommendation = {
+        name: faker.lorem.word(),
+        youtubeLink: `https://www.youtube.com/${faker.random.alpha(10)}`,
+      };
+
+      await supertest(app).post('/recommendations').send(recommendation);
+    }
+
+    const result = await supertest(app).get('/recommendations');
+
+    expect(result.body.length).toEqual(numberOfRecommendationsSent);
+    expect(result.status).toEqual(200);
+  });
 });
 
 describe('Testing GET /recommendations/:id', () => {
