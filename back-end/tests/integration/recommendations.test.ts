@@ -213,7 +213,20 @@ describe('Testing GET /recommendations/random', () => {
 });
 
 describe('Testing GET /recommendations/top/:amount', () => {
-  it.todo(
-    'Returns 200 and an object with the amount of recommendations inside'
-  );
+  it('Returns 200 and an object with the amount of recommendations inside', async () => {
+    for (let i = 0; i < 10; i++) {
+      const recommendation = createRecommendation();
+
+      await supertest(app).post('/recommendations').send(recommendation);
+    }
+
+    const randomNumber = Number(faker.random.numeric(1));
+
+    const result = await supertest(app).get(
+      `/recommendations/top/${randomNumber}`
+    );
+
+    expect(result.body.length).toEqual(randomNumber);
+    expect(result.status).toEqual(200);
+  });
 });
