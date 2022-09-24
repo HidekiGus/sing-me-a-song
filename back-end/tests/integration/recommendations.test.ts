@@ -2,17 +2,19 @@ import supertest from 'supertest';
 import app from '../../src/app';
 import { prisma } from '../../src/database';
 import { faker } from '@faker-js/faker';
+import createRecommendation from '../factories/recommendationFactory';
 
 beforeEach(async () => {
   await prisma.$executeRaw`TRUNCATE TABLE recommendations;`;
 });
 
+afterAll(() => {
+  prisma.$disconnect;
+});
+
 describe('Testing POST /recommendations', () => {
   it('Creates valid recommendation', async () => {
-    const recommendation = {
-      name: faker.lorem.word(),
-      youtubeLink: `https://www.youtube.com/${faker.random.alpha(10)}`,
-    };
+    const recommendation = createRecommendation();
 
     const result = await supertest(app)
       .post('/recommendations')
@@ -52,10 +54,7 @@ describe('Testing POST /recommendations', () => {
 
 describe('Testing POST /recommendations/:id/upvote', () => {
   it('Returns 200 for an upvote in a valid recommendation', async () => {
-    const recommendation = {
-      name: faker.lorem.word(),
-      youtubeLink: `https://www.youtube.com/${faker.random.alpha(10)}`,
-    };
+    const recommendation = createRecommendation();
 
     await supertest(app).post('/recommendations').send(recommendation);
 
@@ -76,10 +75,7 @@ describe('Testing POST /recommendations/:id/upvote', () => {
   });
 
   it('Returns 404 for an upvote with an invalid id', async () => {
-    const recommendation = {
-      name: faker.lorem.word(),
-      youtubeLink: `https://www.youtube.com/${faker.random.alpha(10)}`,
-    };
+    const recommendation = createRecommendation();
 
     await supertest(app).post('/recommendations').send(recommendation);
 
@@ -97,10 +93,7 @@ describe('Testing POST /recommendations/:id/upvote', () => {
 
 describe('Testing POST /recommendations/:id/downvote', () => {
   it('Returns 200 for downvote in a recommendation with score=-4 and keeps the recommendation', async () => {
-    const recommendation = {
-      name: faker.lorem.word(),
-      youtubeLink: `https://www.youtube.com/${faker.random.alpha(10)}`,
-    };
+    const recommendation = createRecommendation();
 
     await supertest(app).post('/recommendations').send(recommendation);
 
@@ -168,10 +161,7 @@ describe('Testing GET /recommendations', () => {
     const numberOfRecommendationsSent = Number(faker.random.numeric(1));
 
     for (let i = 0; i < numberOfRecommendationsSent; i++) {
-      const recommendation = {
-        name: faker.lorem.word(),
-        youtubeLink: `https://www.youtube.com/${faker.random.alpha(10)}`,
-      };
+      const recommendation = createRecommendation();
 
       await supertest(app).post('/recommendations').send(recommendation);
     }
@@ -184,12 +174,42 @@ describe('Testing GET /recommendations', () => {
 });
 
 describe('Testing GET /recommendations/:id', () => {
-  it.todo('Returns 200 and one recommendation with the correct id');
+  it('Returns 200 and one recommendation with the correct id', async () => {
+    const recommendation = createRecommendation();
+
+    await supertest(app).post('/recommendations').send(recommendation);
+
+    const request = await supertest(app).get('/recommendations');
+
+    const recommendationId = request.body[0].id;
+
+    const result = await supertest(app).get(
+      `/recommendations/${recommendationId}`
+    );
+
+    expect(result.status).toEqual(200);
+    expect(result.body.id).toEqual(recommendationId);
+  });
 });
 
 describe('Testing GET /recommendations/random', () => {
-  it.todo('Returns 200 and a recommendation');
-  it.todo('Returns 404 if there are no recommendations');
+  it('Returns 200 and a recommendation', async () => {
+    for (let i = 0; i < 5; i++) {
+      const recommendation = createRecommendation();
+
+      await supertest(app).post('/recommendations').send(recommendation);
+    }
+
+    const result = await supertest(app).get('/recommendations/random');
+
+    expect(result.body).toBeInstanceOf(Object);
+    expect(result.status).toEqual(200);
+  });
+  it('Returns 404 if there are no recommendations', async () => {
+    const result = await supertest(app).get('/recommendations/random');
+
+    expect(result.status).toEqual(404);
+  });
 });
 
 describe('Testing GET /recommendations/top/:amount', () => {
