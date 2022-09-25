@@ -1,3 +1,7 @@
+beforeEach(() => {
+  cy.resetDatabase();
+})
+
 describe('Tests POST /recommendations', () => {
   it('Tests if it adds a valid recommendation', async () => {
     cy.visit('http://localhost:3000');
