@@ -9,6 +9,7 @@ import testsRouter from './routers/testsRouter.js';
 const app = express();
 app.use(cors());
 app.use(express.json());
+dotenv.config();
 
 app.use('/recommendations', recommendationRouter);
 if (process.env.NODE_ENV === 'test') {
