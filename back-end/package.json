@@ -6,7 +6,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/server.ts",
-    "test": "jest --no-cache"
+    "test": "jest -i --no-cache",
+    "test:unit": "dotenv -e .env.test jest -- -i --coverage --testPathPattern=tests/unit"
   },
   "keywords": [],
   "author": "",
