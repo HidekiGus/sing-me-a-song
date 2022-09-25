@@ -12,9 +12,6 @@
 // -- This is a parent command --
 // Cypress.Commands.add('login', (email, password) => { ... })
 //
-Cypress.Commands.add("resetDatabase", () => {
-  cy.request("POST", "http://localhost:4000/reset-database");
-});
 //
 // -- This is a child command --
 // Cypress.Commands.add('drag', { prevSubject: 'element'}, (subject, options) => { ... })
@@ -26,3 +23,11 @@ Cypress.Commands.add("resetDatabase", () => {
 //
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
+
+Cypress.Commands.add("resetDatabase", () => {
+  cy.request("POST", "http://localhost:4000/reset-database");
+});
+
+Cypress.Commands.add("addRecommendation", () => {
+  cy.request("POST", "http://localhost:4000/add-recommendation");
+});
